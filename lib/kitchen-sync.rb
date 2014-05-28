@@ -116,7 +116,7 @@ module Kitchen
       end
     end
 
-    CHECKSUMS_PATH = File.expand_path('../checksums.rb', __FILE__)
+    CHECKSUMS_PATH = File.expand_path('./kitchen-sync/checksums.rb', __FILE__)
     CHECKSUMS_HASH = Digest::SHA1.file(CHECKSUMS_PATH)
     CHECKSUMS_REMOTE_PATH = File.join('', 'tmp', "checksums-#{CHECKSUMS_HASH}.rb")
 
