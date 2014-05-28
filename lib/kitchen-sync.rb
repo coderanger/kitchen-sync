@@ -24,6 +24,9 @@ require 'net/sftp'
 require 'digest/sha1'
 require 'json'
 
+module KitchenSync
+end
+
 module Kitchen
   class SSH
 
