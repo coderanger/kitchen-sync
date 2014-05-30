@@ -17,5 +17,14 @@
 #
 
 class KitchenSync
-  VERSION = '1.0.0'
+  class Base
+    def initialize(logger, session)
+      @logger = logger
+      @session = session
+    end
+
+    def upload(local, remote, recursive=true)
+      raise NotImplementedError
+    end
+  end
 end
