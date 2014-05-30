@@ -54,6 +54,12 @@ class KitchenSync
       sftp_loop(0) # Wait until all xfers are complete
     end
 
+    def shutdown
+      @logger.debug("[sync:sftp] closing connection to #{@session}")
+      @sftp.close_channel
+      @sftp = nil
+    end
+
     private
 
     # Return if the path exists (because net::sftp uses exceptions for that and

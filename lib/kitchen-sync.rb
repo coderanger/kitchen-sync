@@ -63,6 +63,10 @@ class KitchenSync
     @logger.info("[sync] Time taken to upload #{local} to #{@session}:#{remote}: " +
              "%.2f sec" % time)
   end
+
+  def shutdown
+    @impl.shutdown
+  end
 end
 
 # ┻━┻ ︵ヽ(`Д´)ﾉ︵ ┻━┻
@@ -71,18 +75,15 @@ module Kitchen
 
     #old_upload = instance_method(:upload!)
     define_method(:upload!) do |local, remote, options = {}, &progress|
-      KitchenSync.new(logger, session).upload(local, remote, options)
+      @kitchen_sync ||= KitchenSync.new(logger, session)
+      @kitchen_sync.upload(local, remote, options)
     end
 
     # Monkey patch the shutdown to tear down the SFTP connection too.
     old_shutdown = instance_method(:shutdown)
     define_method(:shutdown) do
-      #require 'pry'; binding.pry
       begin
-        if session && !session.sftp.closed?
-          logger.debug("[SFTP] closing connection to #{self}")
-          session.sftp.close_channel
-        end
+        @kitchen_sync.shutdown if @kitchen_sync
       ensure
         old_shutdown.bind(self).call
       end

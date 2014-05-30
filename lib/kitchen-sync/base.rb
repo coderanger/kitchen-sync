@@ -26,5 +26,9 @@ class KitchenSync
     def upload(local, remote, recursive=true)
       raise NotImplementedError
     end
+
+    def shutdown
+      # This space left intentionally blank
+    end
   end
 end
