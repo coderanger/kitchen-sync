@@ -25,7 +25,7 @@ class KitchenSync
     CHECKSUMS_PATH = File.expand_path('../checksums.rb', __FILE__)
     CHECKSUMS_HASH = Digest::SHA1.file(CHECKSUMS_PATH)
     CHECKSUMS_REMOTE_PATH = "/tmp/checksums-#{CHECKSUMS_HASH}.rb" # This won't work on Windows targets
-    MAX_TRANSFERS = 32
+    MAX_TRANSFERS = 64
 
     def initialize(*args)
       super
