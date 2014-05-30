@@ -1,6 +1,7 @@
 #
 # Author:: Noah Kantrowitz <noah@coderanger.net>
 #
+# Copyright 2013-2014, Fletcher Nichol
 # Copyright 2014, Noah Kantrowitz
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
@@ -16,20 +17,20 @@
 # limitations under the License.
 #
 
+require 'kitchen-sync/base'
+
+require 'net/scp'
+
 class KitchenSync
-  class Base
-    def initialize(logger, session, options)
-      @logger = logger
-      @session = session
-      @options = options
-    end
-
+  class SCP < Base
     def upload(local, remote, recursive=true)
-      raise NotImplementedError
-    end
-
-    def shutdown
-      # This space left intentionally blank
+      true_remote = File.join(remote, File.basename(local))
+      @session.exec!("rm -rf #{true_remote}")
+      @session.scp.upload!(local, remote, recursive: recursive) do |ch, name, sent, total|
+        if sent == total
+          @logger.debug("Uploaded #{name} (#{total} bytes)")
+        end
+      end
     end
   end
 end

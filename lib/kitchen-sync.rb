@@ -25,32 +25,41 @@ require 'kitchen/provisioner/chef_base'
 require 'net/sftp'
 
 require 'kitchen-sync/core_ext'
+require 'kitchen-sync/rsync'
+require 'kitchen-sync/scp'
 require 'kitchen-sync/sftp'
 require 'kitchen-sync/version'
 
 
 class KitchenSync
-  def initialize(logger, session)
+  IMPLEMENTATIONS = {
+    'rsync' => Rsync,
+    'scp' => SCP,
+    'sftp' => SFTP,
+  }
+
+  def initialize(logger, session, options)
     @logger = logger
     @session = session
+    @options = options
     @impl = load_implementation
   end
 
   def load_implementation(default_mode='sftp')
     mode = ENV['KITCHEN_SYNC_MODE'] || default_mode
     @logger.debug("[sync] Using transfer mode #{mode}")
-    case mode
-    when 'rsync'
-      # TODO
-    when 'scp'
-      SCP.new(@logger, @session)
-    when 'sftp'
-      begin
-        SFTP.new(@logger, @session)
-      rescue Net::SFTP::Exception
-        # This means SFTP isn't enabled, fall back to SCP
-        @logger.debug("[sync] SFTP unavailable, falling back to SCP")
-        SCP.new(@logger, @session) # This could be a smarter SCP at some point
+    impl_class = IMPLEMENTATIONS[mode]
+    raise "Sync implementation for #{mode} not found" unless impl_class
+    # Create the instance, any error during init means we use SCP instead
+    begin
+      impl_class.new(@logger, @session, @options)
+    rescue Exception
+      if impl_class != SCP
+        @logger.debug("[sync] Falling back to SCP")
+        impl_class = SCP
+        retry
+      else
+        raise
       end
     end
   end
