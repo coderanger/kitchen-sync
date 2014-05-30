@@ -55,6 +55,8 @@ class KitchenSync
   end
 
   def upload(local, remote, options)
+    # This is set even for single files, so make it something that matters again
+    options[:recursive] = File.directory?(local)
     time = Benchmark.realtime do
       @impl.upload(local, remote, options[:recursive])
     end

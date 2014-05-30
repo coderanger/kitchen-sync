@@ -34,7 +34,7 @@ class KitchenSync
     end
 
     def upload(local, remote, recursive=true)
-      remote = File.join(remote, File.basename(local)) if recursive
+      remote = File.join(remote, File.basename(local))
       # Fast path check, if the remote path doesn't exist at all we just run a direct transfer
       unless safe_stat(remote)
         @logger.debug("[sync:sftp] Fast path upload from #{local} to #{remote}")
