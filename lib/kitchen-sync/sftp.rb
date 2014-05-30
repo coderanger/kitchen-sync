@@ -38,6 +38,7 @@ class KitchenSync
       # Fast path check, if the remote path doesn't exist at all we just run a direct transfer
       unless safe_stat(remote)
         @logger.debug("[sync:sftp] Fast path upload from #{local} to #{remote}")
+        @sftp.mkdir!(remote) if recursive
         @sftp.upload!(local, remote, requests: MAX_TRANSFERS)
         return
       end
