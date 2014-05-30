@@ -90,6 +90,34 @@ module Kitchen
 
     private
 
+    # Bug fix for session.loop never terminating if there is an SFTP conn active
+    # since as far as it is concerned there is still active stuff.
+    def exec_with_exit(cmd)
+      exit_code = nil
+      session.open_channel do |channel|
+
+        channel.request_pty
+
+        channel.exec(cmd) do |ch, success|
+
+          channel.on_data do |ch, data|
+            logger << data
+          end
+
+          channel.on_extended_data do |ch, type, data|
+            logger << data
+          end
+
+          channel.on_request("exit-status") do |ch, data|
+            exit_code = data.read_long
+          end
+        end
+      end
+      session.loop { !exit_code } # THERE IS A CHANGE ON THIS LINE, PAY ATTENTION!!!!!!
+      exit_code
+    end
+
+
     # Copy your SSH identity, creating a new one if needed
     def copy_identity
       return if @copied_identity
