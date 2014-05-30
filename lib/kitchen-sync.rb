@@ -174,64 +174,6 @@ module Kitchen
         session.scp.upload!(local, remote, options, &progress)
       end
     end
-
-    CHECKSUMS_PATH = File.expand_path('../kitchen-sync/checksums.rb', __FILE__)
-    CHECKSUMS_HASH = Digest::SHA1.file(CHECKSUMS_PATH)
-    CHECKSUMS_REMOTE_PATH = File.join('', 'tmp', "checksums-#{CHECKSUMS_HASH}.rb")
-
-    def copy_checksums_script
-      return if @checksums_copied
-      session.sftp.upload!(CHECKSUMS_PATH, CHECKSUMS_REMOTE_PATH)
-      @checksums_copied = true
-    end
-
-    def sftp_upload(local, remote, options = {}, &progress)
-
-
-      copy_checksums_script
-      remote = File.join(remote, File.basename(local)) if options[:recursive]
-      checksum_cmd = "/opt/chef/embedded/bin/ruby #{CHECKSUMS_REMOTE_PATH} #{remote}"
-      logger.info("Running #{checksum_cmd}")
-      checksums = JSON.parse(session.exec!(checksum_cmd))
-      glob_path = if options[:recursive]
-        File.join(local, '**', '*')
-      else
-        local
-      end
-      pending = []
-      Dir.glob(glob_path, File::FNM_PATHNAME | File::FNM_DOTMATCH).each do |path|
-        next unless File.file?(path)
-        rel_path = path[local.length..-1]
-        remote_hash = checksums[rel_path]
-        pending << rel_path unless remote_hash && remote_hash == Digest::SHA1.file(path).hexdigest
-      end
-      logger.info("Pending transfers for:\n#{pending.map{|s| "  #{s}\n"}.join('')}")
-      xfers = []
-      while !pending.empty?
-        while xfers.length <= 32
-          path = pending.pop
-          break unless path
-          # Check for dirs that need to be created
-          parts = path.split(File::SEPARATOR)
-          parts.pop # Drop the filename since we are only checking dirs
-          parts_to_check = []
-          until parts.empty?
-            parts_to_check << parts.shift
-            path_to_check = File.join(*parts_to_check)
-            unless checksums[path_to_check]
-              logger.debug("Creating directory #{remote}#{path_to_check}")
-              xfers << session.sftp.mkdir("#{remote}#{path_to_check}")
-              checksums[path_to_check] = true
-            end
-          end
-          logger.debug("Starting transfer for #{local}#{path} to #{remote}#{path}")
-          xfers << session.sftp.upload("#{local}#{path}", "#{remote}#{path}")
-        end
-        xfers.pop.wait
-      end
-      xfers.each {|xfer| xfer.wait}
-    end
-
   end
 
   # Monkey patch to prevent the deletion of everything
