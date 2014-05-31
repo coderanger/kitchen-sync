@@ -1,7 +1,7 @@
 kitchen-sync
 ============
 
-Do you wish your test-kitchen runs were faster? Boy do I have the gem for you!
+Do you wish your test-kitchen runs were faster? Do I ever have the gem for you!
 
 kitchen-sync provides alternate file transfer implementations for test-kitchen,
 most of which are faster than the default, thus speeding up your test runs.
