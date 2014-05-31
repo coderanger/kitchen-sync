@@ -46,7 +46,7 @@ class KitchenSync
   end
 
   def load_implementation(default_mode='sftp')
-    mode = ENV['KITCHEN_SYNC_MODE'] || default_mode
+    mode = (ENV['KITCHEN_SYNC_MODE'] || default_mode).downcase
     @logger.debug("[sync] Using transfer mode #{mode}")
     impl_class = IMPLEMENTATIONS[mode]
     raise "Sync implementation for #{mode} not found" unless impl_class
