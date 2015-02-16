@@ -37,10 +37,14 @@ used directly.
 ### Rsync
 
 The rsync mode is based on the work done by [Mikhail Bautin](https://github.com/test-kitchen/test-kitchen/pull/359).
-This is the fastest mode, but it does have a few downsides. The biggest is that
-you must be using `ssh-agent` and have an identity loaded for it to use. It also
-requires that rsync be available on the remote side. Consider this implementation
-more experimental than the others at this time.
+This is the fastest mode, but it does have a few downsides.
+There are 2 options to provide authenticatoin for Rsync.
+If no KITCHEN_SYNC_IDENTITY env variable is set. `.ssh/config` is consulted
+for the host and it's `IdentityFile` is used for authenticaton.
+`KITCHEN_SYNC_IDENTITY=0` will inform kitchen-sync to use 1st identity
+from ssh-agent. You can see all identities configure by issuing `ssh-add -l`.
+It also requires that rsync be available on the remote side.
+Consider this implementation more experimental than the others at this time.
 
 License
 -------
