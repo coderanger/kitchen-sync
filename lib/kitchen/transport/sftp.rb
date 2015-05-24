@@ -184,9 +184,6 @@ module Kitchen
 
         def purge_files(checksums, remote)
           checksums.each do |key, value|
-            # Special case for /tmp/kitchen/cache upload not clearing cookbooks.
-            # Tracked in https://github.com/test-kitchen/test-kitchen/issues/725
-            next if remote == '/tmp/kitchen/cache' && key.start_with?('/cookbooks')
             # Check if the file was uploaded in #upload_file.
             if value != true
               logger.debug("[SFTP] Removing #{remote}#{key}")
