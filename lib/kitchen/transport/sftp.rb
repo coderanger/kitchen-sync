@@ -15,6 +15,7 @@
 #
 
 require 'kitchen/transport/ssh'
+require 'net/sftp'
 
 
 module Kitchen
