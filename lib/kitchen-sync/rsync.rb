@@ -43,7 +43,9 @@ class KitchenSync
     # Copy your SSH identity, creating a new one if needed
     def copy_identity
       return if @copied_identity
-      key = Net::SSH::Authentication::Agent.connect.identities.first
+      identities = Net::SSH::Authentication::Agent.connect.identities
+      raise 'No SSH identities found. Please run ssh-add.' if identities.empty?
+      key = identities.first
       enc_key = Base64.encode64(key.to_blob).gsub("\n", '')
       identitiy = "ssh-rsa #{enc_key} #{key.comment}"
       @session.exec! <<-EOT
