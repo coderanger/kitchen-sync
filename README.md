@@ -42,6 +42,19 @@ you must be using `ssh-agent` and have an identity loaded for it to use. It also
 requires that rsync be available on the remote side. Consider this implementation
 more experimental than the others at this time.
 
+### SSH-Tar
+
+SSH-Tar mode is based on piping native ssh and tar commands, so that all files are
+transferred as a single ssh stream providing dramatic performance improvements.
+This transport will only work with TK 1.4 and *nix like systems with mentioned
+binaries available in the PATH.
+
+.kitchen.yml snippet to activate SSH-Tar transport:
+```
+transport:
+  name: sshtar
+```
+
 License
 -------
 
