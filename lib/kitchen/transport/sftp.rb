@@ -21,6 +21,9 @@ require 'net/sftp'
 module Kitchen
   module Transport
     class Sftp < Ssh
+
+      default_config :remote_ruby_path, '/opt/chef/embedded/bin/ruby'
+
       CHECKSUMS_PATH = File.expand_path('../../../kitchen-sync/checksums.rb', __FILE__)
       CHECKSUMS_HASH = Digest::SHA1.file(CHECKSUMS_PATH)
       CHECKSUMS_REMOTE_PATH = "/tmp/checksums-#{CHECKSUMS_HASH}.rb" # This won't work on Windows targets
@@ -36,10 +39,19 @@ module Kitchen
         end
 
         @connection_options = options
-        @connection = self.class::Connection.new(options, &block)
+        @connection = self.class::Connection.new(options,
+                                                 config[:remote_ruby_path],
+                                                 &block)
       end
 
+
       class Connection < Ssh::Connection
+
+        def initialize(options, remote_ruby_path, &block)
+          @remote_ruby_path = remote_ruby_path
+          super(options, &block)
+        end
+
         # Wrap Ssh::Connection#close to also shut down the SFTP connection.
         def close
           if @sftp_session
@@ -75,7 +87,7 @@ module Kitchen
           # Get checksums for existing files on the remote side.
           logger.debug("[SFTP] Slow path upload from #{local} to #{remote}")
           copy_checksums_script!
-          checksum_cmd = "/opt/chef/embedded/bin/ruby #{CHECKSUMS_REMOTE_PATH} #{remote}"
+          checksum_cmd = "#{@remote_ruby_path} #{CHECKSUMS_REMOTE_PATH} #{remote}"
           logger.debug("[SFTP] Running #{checksum_cmd}")
           checksums = JSON.parse(session.exec!(checksum_cmd))
           # Sync files that have changed.
@@ -146,6 +158,7 @@ module Kitchen
           # Only try to transfer the script if it isn't present. a stat takes about
           # 1/3rd the time of the transfer, so worst case here is still okay.
           sftp_session.upload!(CHECKSUMS_PATH, CHECKSUMS_REMOTE_PATH) unless safe_stat(CHECKSUMS_REMOTE_PATH)
+          logger.debug("[SFTP] checksums script upload from #{CHECKSUMS_PATH} to #{CHECKSUMS_REMOTE_PATH}")
           @checksums_copied = true
         end
 
