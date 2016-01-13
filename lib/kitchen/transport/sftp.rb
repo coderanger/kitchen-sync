@@ -1,5 +1,5 @@
 #
-# Copyright 2014-2015, Noah Kantrowitz
+# Copyright 2014-2016, Noah Kantrowitz
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -14,8 +14,14 @@
 # limitations under the License.
 #
 
+require 'benchmark'
+require 'digest/sha1'
+require 'json'
+
 require 'kitchen/transport/ssh'
 require 'net/sftp'
+
+require 'kitchen-sync/core_ext'
 
 
 module Kitchen

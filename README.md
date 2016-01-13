@@ -9,43 +9,41 @@ most of which are faster than the default, thus speeding up your test runs.
 Quick Start
 -----------
 
-Add `gem 'kitchen-sync'` to your Gemfile and then at the top of your
-`.kitchen.yml`:
+Run `chef gem install kitchen-sync` and then set your transport to `sftp`:
 
 ```
-#<% require 'kitchen-sync' %>
+transport:
+  name: sftp
 ```
 
 Available Transfer Methods
 --------------------------
 
-You can select the transfer mode using the `KITCHEN_SYNC_MODE` environment
-variable. If not present, it defaults to `sftp`.
-
-### SFTP
+### `sftp`
 
 The default mode uses SFTP for file transfers, as well as a helper script to
 avoid recopying files that are already present on the test host. If SFTP is
 disabled, this will automatically fall back to the SCP mode.
 
-### SCP
+### `rsync`
 
-The SCP mode is just a copy of the implementation from test-kitchen. It is
-present as a fallback and for benchmark comparisons, and generally won't be
-used directly.
-
-### Rsync
-
-The rsync mode is based on the work done by [Mikhail Bautin](https://github.com/test-kitchen/test-kitchen/pull/359).
+The Rsync mode is based on the work done by [Mikhail Bautin](https://github.com/test-kitchen/test-kitchen/pull/359).
 This is the fastest mode, but it does have a few downsides. The biggest is that
 you must be using `ssh-agent` and have an identity loaded for it to use. It also
 requires that rsync be available on the remote side. Consider this implementation
-more experimental than the others at this time.
+more experimental than `sftp` at this time.
+
+
+Windows Guests
+--------------
+
+Windows is not specifically supported at this time, though if you have an SSH
+server it will probably work. There is no support for WinRM.
 
 License
 -------
 
-Copyright 2014, Noah Kantrowitz
+Copyright 2014-2016, Noah Kantrowitz
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
