@@ -33,12 +33,20 @@ you must be using `ssh-agent` and have an identity loaded for it to use. It also
 requires that rsync be available on the remote side. Consider this implementation
 more experimental than `sftp` at this time.
 
-
 Windows Guests
 --------------
 
 Windows is not specifically supported at this time, though if you have an SSH
 server it will probably work. There is no support for WinRM.
+
+Upgrading from 1.x
+------------------
+
+As of version 2.0, kitchen-sync uses Test Kitchen's modular transport system
+rather than monkey patch overrides. To upgrade, remove the `<% require 'kitchen-sync' %>`
+from your `.kitchen.yml` and add the transport configuration mentioned above.
+The `$KITCHEN_SYNC_MODE` environment variable is no longer needed as configuration
+can happen in the normal Yaml file.
 
 License
 -------
