@@ -50,11 +50,23 @@ module Kitchen
         def close
           if @sftp_session
             logger.debug("[SFTP] closing connection to #{self}")
-            sftp_session.close_channel
+            begin
+              sftp_session.close_channel
+            rescue Net::SSH::Disconnect
+              # Welp, we tried.
+            end
           end
         ensure
           @sftp_session = nil
-          super
+          # Make sure we can turn down the session even if closing the channels
+          # fails in the middle because of a remote disconnect.
+          saved_session = @session
+          begin
+            super
+          rescue Net::SSH::Disconnect
+            # Boooo zlib warnings.
+            saved_session.transport.close if saved_session
+          end
         end
 
         def upload(locals, remote)
@@ -99,6 +111,7 @@ module Kitchen
         # Tracked in https://github.com/test-kitchen/test-kitchen/pull/724
         def execute_with_exit_code(command)
           exit_code = nil
+          closed = false
           session.open_channel do |channel|
 
             channel.request_pty
@@ -116,9 +129,13 @@ module Kitchen
               channel.on_request("exit-status") do |_ch, data|
                 exit_code = data.read_long
               end
+
+              channel.on_close do |ch| # This block is new.
+                closed = true
+              end
             end
           end
-          session.loop { exit_code.nil? } # THERE IS A CHANGE ON THIS LINE, PAY ATTENTION!!!!!!
+          session.loop { exit_code.nil? && !closed } # THERE IS A CHANGE ON THIS LINE, PAY ATTENTION!!!!!!
           exit_code
         end
 
