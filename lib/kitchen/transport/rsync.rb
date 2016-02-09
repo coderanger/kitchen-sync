@@ -45,11 +45,12 @@ module Kitchen
           end
 
           locals = Array(locals)
-          # We only try to sync folders for now.
-          rsync_candidates = locals.select {|path| File.directory?(path) }
+          # We only try to sync folders for now and ignore the cache folder
+          # because we don't want to --delete that.
+          rsync_candidates = locals.select {|path| File.directory?(path) && File.basename(path) != 'cache' }
           ssh_command = "ssh #{ssh_args.join(' ')}"
           copy_identity
-          rsync_cmd = "/usr/bin/rsync -e '#{ssh_command}' -az#{logger.level == :debug ? 'vv' : ''} #{rsync_candidates.join(' ')} #{@session.options[:user]}@#{@session.host}:#{remote}"
+          rsync_cmd = "/usr/bin/rsync -e '#{ssh_command}' -az#{logger.level == :debug ? 'vv' : ''} --delete #{rsync_candidates.join(' ')} #{@session.options[:user]}@#{@session.host}:#{remote}"
           logger.debug("[rsync] Running rsync command: #{rsync_cmd}")
           ret = []
           time = Benchmark.realtime do

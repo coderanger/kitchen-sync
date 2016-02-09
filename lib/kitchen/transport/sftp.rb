@@ -72,9 +72,13 @@ module Kitchen
         def upload(locals, remote)
           Array(locals).each do |local|
             full_remote = File.join(remote, File.basename(local))
+            options = {
+              recursive: File.directory?(local),
+              purge: File.basename(local) != 'cache',
+            }
             recursive = File.directory?(local)
             time = Benchmark.realtime do
-              sftp_upload!(local, full_remote, recursive)
+              sftp_upload!(local, full_remote, options)
             end
             logger.info("[SFTP] Time taken to upload #{local} to #{self}:#{full_remote}: %.2f sec" % time)
           end
@@ -82,7 +86,7 @@ module Kitchen
 
         private
 
-        def sftp_upload!(local, remote, recursive)
+        def sftp_upload!(local, remote, recursive: true, purge: true)
           # Fast path check, if the remote path doesn't exist at all we just run a direct transfer
           unless safe_stat(remote)
             logger.debug("[SFTP] Fast path upload from #{local} to #{remote}")
@@ -100,7 +104,7 @@ module Kitchen
           files_to_upload(checksums, local, recursive).each do |rel_path|
             upload_file(checksums, local, remote, rel_path)
           end
-          purge_files(checksums, remote)
+          purge_files(checksums, remote) if purge
           # Wait until all xfers are complete.
           sftp_loop(0)
         end
