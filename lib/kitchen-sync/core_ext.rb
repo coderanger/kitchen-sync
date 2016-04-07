@@ -19,9 +19,18 @@ module Kitchen
   # Monkey patch to prevent the deletion of everything
   module Provisioner
     class ChefBase < Base
-      def init_command
-        "mkdir -p #{config[:root_path]}"
+
+      old_init_command = instance_method(:init_command)
+
+      define_method(:init_command) do
+        if (defined?(Kitchen::Transport::Sftp) && instance.transport.is_a?(Kitchen::Transport::Sftp)) || \
+           (defined?(Kitchen::Transport::Rsync) && instance.transport.is_a?(Kitchen::Transport::Rsync))
+           "mkdir -p #{config[:root_path]}"
+        else
+          old_init_command.bind(self).()
+        end
       end
+
     end
   end
 end
