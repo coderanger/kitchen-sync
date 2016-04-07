@@ -1,5 +1,13 @@
 # Kitchen-Sync Changelog
 
+## v2.1.1
+
+Allow mixing kitchen-sync transports with other transports.
+
+## v2.1.0
+
+Compatibility with new Test Kitchen features.
+
 ## v2.0.0
 
 Fully revamped at last for Test Kitchen's new modular transports.
