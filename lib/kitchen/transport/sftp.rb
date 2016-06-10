@@ -97,7 +97,7 @@ module Kitchen
           # Get checksums for existing files on the remote side.
           logger.debug("[SFTP] Slow path upload from #{local} to #{remote}")
           copy_checksums_script!
-          checksum_cmd = "/opt/chef/embedded/bin/ruby #{CHECKSUMS_REMOTE_PATH} #{remote}"
+          checksum_cmd = "ruby #{CHECKSUMS_REMOTE_PATH} #{remote}"
           logger.debug("[SFTP] Running #{checksum_cmd}")
           checksums = JSON.parse(session.exec!(checksum_cmd))
           # Sync files that have changed.
