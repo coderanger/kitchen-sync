@@ -75,7 +75,12 @@ module Kitchen
         # Copy your SSH identity, creating a new one if needed
         def copy_identity
           return if @copied_identity
-          identities = Net::SSH::Authentication::Agent.connect.identities
+          begin
+            identities = Net::SSH::Authentication::Agent.connect.identities
+          rescue
+            logger.warn "No SSH Agent found"
+            return
+          end
           raise 'No SSH identities found. Please run ssh-add.' if identities.empty?
           key = identities.first
           enc_key = Base64.encode64(key.to_blob).gsub("\n", '')
