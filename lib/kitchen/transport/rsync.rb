@@ -44,6 +44,7 @@ module Kitchen
             return super
           end
 
+          @session ||= session
           locals = Array(locals)
           # We only try to sync folders for now and ignore the cache folder
           # because we don't want to --delete that.
