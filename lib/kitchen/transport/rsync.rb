@@ -50,7 +50,7 @@ module Kitchen
           rsync_candidates = locals.select {|path| File.directory?(path) && File.basename(path) != 'cache' }
           ssh_command = "ssh #{ssh_args.join(' ')}"
           copy_identity
-          rsync_cmd = "/usr/bin/rsync -e '#{ssh_command}' -az#{logger.level == :debug ? 'vv' : ''} --delete #{rsync_candidates.join(' ')} #{@session.options[:user]}@#{@session.host}:#{remote}"
+          rsync_cmd = "/usr/bin/rsync -e '#{ssh_command}' -aH#{logger.level == :debug ? 'vv' : ''} --numeric-ids --delete #{rsync_candidates.join(' ')} #{@session.options[:user]}@#{@session.host}:#{remote}"
           logger.debug("[rsync] Running rsync command: #{rsync_cmd}")
           ret = []
           time = Benchmark.realtime do
@@ -92,13 +92,16 @@ module Kitchen
         end
 
         def ssh_args
-          args = %W{ -o UserKnownHostsFile=/dev/null }
+          args = %W{ -T }
+          args += %W{ -o Compression=no }
+          args += %W{ -o UserKnownHostsFile=/dev/null }
           args += %W{ -o StrictHostKeyChecking=no }
           args += %W{ -o IdentitiesOnly=yes } if @options[:keys]
           args += %W{ -o LogLevel=#{@logger.debug? ? "VERBOSE" : "ERROR"} }
           args += %W{ -o ForwardAgent=#{options[:forward_agent] ? "yes" : "no"} } if @options.key? :forward_agent
           Array(@options[:keys]).each { |ssh_key| args += %W{ -i #{ssh_key}} }
           args += %W{ -p #{@session.options[:port]}}
+          args += %W{ -x }
         end
       end
 
