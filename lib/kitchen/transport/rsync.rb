@@ -101,7 +101,7 @@ module Kitchen
           # this fixes an error that shows up with:
           # 'ssh_percent_expand: unknown key %2'
           # when the path to key includes '%'.
-          Array(@options[:keys]).each { |ssh_key| args += %W{ -o IdentityFile=#{ssh_key.gsub('%', '%%'} } }
+          Array(@options[:keys]).each { |ssh_key| args += %W{ -o IdentityFile=#{ssh_key.gsub('%', '%%')} } }
           args += %W{ -p #{@session.options[:port]}}
         end
       end
