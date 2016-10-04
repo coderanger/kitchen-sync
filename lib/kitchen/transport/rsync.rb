@@ -56,7 +56,7 @@ module Kitchen
           time = Benchmark.realtime do
             ret << system(rsync_cmd)
           end
-          logger.info("[rsync] Time taken to upload #{rsync_candidates.join(';')} to #{self}:#{remote}: %.2f sec" % time)
+          logger.info("[rsync] Time taken to upload %s to %s:%s: %.2f sec" % [ rsync_candidates.join(';'), self, remote, time ])
           unless ret.first
             logger.warn("[rsync] rsync exited with status #{$?.exitstatus}, using SCP instead")
             @rsync_failed = true
