@@ -23,6 +23,11 @@ require 'net/sftp'
 
 require 'kitchen-sync/core_ext'
 
+require 'rubygems'
+require 'rubygems/package'
+require 'zlib'
+require 'fileutils'
+
 
 module Kitchen
   module Transport
@@ -91,7 +96,26 @@ module Kitchen
           unless safe_stat(remote)
             logger.debug("[SFTP] Fast path upload from #{local} to #{remote}")
             sftp_session.mkdir!(remote) if recursive
-            sftp_session.upload!(local, remote, requests: MAX_TRANSFERS)
+            gzip_uploaded = false
+            if File.directory?(local)
+                logger.debug("[SFTP] Attempting to upload gzip of folder")
+                # tar.gz folder
+                temp_file_name = 'xfer_tmp.tar.jz'
+                gzipped_file_path = File.join(local, temp_file_name)
+                gzipped_data = gzip(tar(local), gzipped_file_path)
+                # Upload tar.gz to remote
+                remote_path = "#{remote}/#{temp_file_name}"
+                sftp_session.upload!(gzipped_file_path, remote_path, requests: MAX_TRANSFERS)
+                # Unzip tar.gz @ remote
+                exit_code = execute_with_exit_code("cd #{remote} && tar -zxvf #{temp_file_name}")
+                # Cleanup
+                sftp_session.remove(remote_path)
+                # Validate success
+                gzip_uploaded = exit_code == 0
+            end
+            if not gzip_uploaded
+                sftp_session.upload!(local, remote, requests: MAX_TRANSFERS)
+            end
             return
           end
           # Get checksums for existing files on the remote side.
@@ -234,10 +258,37 @@ module Kitchen
             sftp_xfers.length > n_xfers # Run until we have fewer than max
           end
         end
+        
+        def tar(path)
+          tarfile = StringIO.new("")
+          Gem::Package::TarWriter.new(tarfile) do |tar|
+            Dir[File.join(path, "**/*")].each do |file|
+              mode = File.stat(file).mode
+              relative_file = file.sub /^#{Regexp::escape path}\/?/, ''
 
+              if File.directory?(file)
+                tar.mkdir relative_file, mode
+              else
+                tar.add_file relative_file, mode do |tf|
+                  File.open(file, "rb") { |f| tf.write f.read }
+                end
+              end
+            end            
+          end
 
+          tarfile.rewind
+          tarfile
+        end
+
+        # gzips the underlying string in the given StringIO,
+        # returning a new StringIO representing the 
+        # compressed file.
+        def gzip(tarfile, output_file)
+          z = Zlib::GzipWriter.open(output_file)
+          z.write tarfile.read
+          z.close
+        end
       end
-
     end
   end
 end
