@@ -100,7 +100,7 @@ module Kitchen
             if File.directory?(local)
                 logger.debug("[SFTP] Attempting to upload gzip of folder")
                 # tar.gz folder
-                temp_file_name = 'xfer_tmp.tar.jz'
+                temp_file_name = 'xfer_tmp.tar.gz'
                 gzipped_file_path = File.join(local, temp_file_name)
                 gzipped_data = gzip(tar(local), gzipped_file_path)
                 # Upload tar.gz to remote
