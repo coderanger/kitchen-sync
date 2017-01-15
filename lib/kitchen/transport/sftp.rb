@@ -107,7 +107,7 @@ module Kitchen
                 remote_path = "#{remote}/#{temp_file_name}"
                 sftp_session.upload!(gzipped_file_path, remote_path, requests: MAX_TRANSFERS)
                 # Unzip tar.gz @ remote
-                exit_code = execute_with_exit_code("cd #{remote} && tar -zxvf #{temp_file_name}")
+                exit_code = execute_with_exit_code("cd #{remote} && tar -zxf #{temp_file_name}")
                 # Cleanup
                 sftp_session.remove(remote_path)
                 # Validate success
