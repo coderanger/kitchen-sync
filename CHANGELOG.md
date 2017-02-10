@@ -1,5 +1,10 @@
 # Kitchen-Sync Changelog
 
+## v2.1.2
+
+Catch errors from closed sockets during instance shutdown. Fixes compat with
+net-ssh 4.x.
+
 ## v2.1.1
 
 Allow mixing kitchen-sync transports with other transports.

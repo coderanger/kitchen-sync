@@ -54,6 +54,9 @@ module Kitchen
               sftp_session.close_channel
             rescue Net::SSH::Disconnect
               # Welp, we tried.
+            rescue IOError
+              # Can happen with net-ssh 4.x, no idea why.
+              # See https://github.com/net-ssh/net-ssh/pull/493
             end
           end
         ensure
