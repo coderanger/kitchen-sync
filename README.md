@@ -57,6 +57,19 @@ from your `.kitchen.yml` and add the transport configuration mentioned above.
 The `$KITCHEN_SYNC_MODE` environment variable is no longer needed as configuration
 can happen in the normal Yaml file.
 
+### SSH-Tar
+
+SSH-Tar mode is based on piping native ssh and tar commands, so that all files are
+transferred as a single ssh stream providing dramatic performance improvements.
+This transport will only work with TK 1.4 and *nix like systems with mentioned
+binaries available in the PATH.
+
+.kitchen.yml snippet to activate SSH-Tar transport:
+```
+transport:
+  name: sshtar
+```
+
 License
 -------
 
