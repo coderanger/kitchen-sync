@@ -25,6 +25,15 @@ The default mode uses SFTP for file transfers, as well as a helper script to
 avoid recopying files that are already present on the test host. If SFTP is
 disabled, this will automatically fall back to the SCP mode.
 
+By default this will use the Chef omnibus Ruby, you can customize the path to
+Ruby via `ruby_path`:
+
+```
+transport:
+  name: sftp
+  ruby_path: /usr/bin/ruby
+```
+
 ### `rsync`
 
 The Rsync mode is based on the work done by [Mikhail Bautin](https://github.com/test-kitchen/test-kitchen/pull/359).

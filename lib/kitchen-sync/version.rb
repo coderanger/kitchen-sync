@@ -16,5 +16,5 @@
 
 
 class KitchenSync
-  VERSION = '2.1.3.pre'
+  VERSION = '2.2.0'
 end

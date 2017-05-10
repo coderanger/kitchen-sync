@@ -32,6 +32,8 @@ module Kitchen
       CHECKSUMS_REMOTE_PATH = "/tmp/checksums-#{CHECKSUMS_HASH}.rb" # This won't work on Windows targets
       MAX_TRANSFERS = 64
 
+      default_config :ruby_path, '/opt/chef/embedded/bin/ruby'
+
       # Copy-pasta from Ssh#create_new_connection because I need the SFTP
       # connection class.
       # Tracked in https://github.com/test-kitchen/test-kitchen/pull/726
@@ -42,10 +44,15 @@ module Kitchen
         end
 
         @connection_options = options
-        @connection = self.class::Connection.new(options, &block)
+        @connection = self.class::Connection.new(config, options, &block)
       end
 
       class Connection < Ssh::Connection
+        def initialize(config, options, &block)
+          @config = config
+          super(options, &block)
+        end
+
         # Wrap Ssh::Connection#close to also shut down the SFTP connection.
         def close
           if @sftp_session
@@ -100,7 +107,7 @@ module Kitchen
           # Get checksums for existing files on the remote side.
           logger.debug("[SFTP] Slow path upload from #{local} to #{remote}")
           copy_checksums_script!
-          checksum_cmd = "/opt/chef/embedded/bin/ruby #{CHECKSUMS_REMOTE_PATH} #{remote}"
+          checksum_cmd = "#{@config[:ruby_path]} #{CHECKSUMS_REMOTE_PATH} #{remote}"
           logger.debug("[SFTP] Running #{checksum_cmd}")
           checksums = JSON.parse(session.exec!(checksum_cmd))
           # Sync files that have changed.
