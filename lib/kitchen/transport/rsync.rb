@@ -24,6 +24,16 @@ require 'kitchen-sync/core_ext'
 module Kitchen
   module Transport
     class Rsync < Ssh
+      def finalize_config!(instance)
+        super.tap do
+          if defined?(Kitchen::Verifier::Inspec) && instance.verifier.is_a?(Kitchen::Verifier::Inspec)
+            instance.verifier.send(:define_singleton_method, :runner_options_for_rsync) do |config_data|
+              runner_options_for_ssh(config_data)
+            end
+          end
+        end
+      end
+
       # Copy-pasta from Ssh#create_new_connection because I need the Rsync
       # connection class.
       # Tracked in https://github.com/test-kitchen/test-kitchen/pull/726

@@ -34,6 +34,16 @@ module Kitchen
 
       default_config :ruby_path, '/opt/chef/embedded/bin/ruby'
 
+      def finalize_config!(instance)
+        super.tap do
+          if defined?(Kitchen::Verifier::Inspec) && instance.verifier.is_a?(Kitchen::Verifier::Inspec)
+            instance.verifier.send(:define_singleton_method, :runner_options_for_sftp) do |config_data|
+              runner_options_for_ssh(config_data)
+            end
+          end
+        end
+      end
+
       # Copy-pasta from Ssh#create_new_connection because I need the SFTP
       # connection class.
       # Tracked in https://github.com/test-kitchen/test-kitchen/pull/726
