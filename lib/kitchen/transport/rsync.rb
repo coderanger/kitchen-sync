@@ -66,7 +66,7 @@ module Kitchen
           time = Benchmark.realtime do
             ret << system(rsync_cmd)
           end
-          logger.info("[rsync] Time taken to upload #{rsync_candidates.join(';')} to #{self}:#{remote}: %.2f sec" % time)
+          logger.info("[rsync] Time taken to upload %s to %s:%s: %.2f sec" % [ rsync_candidates.join(';'), self, remote, time ])
           unless ret.first
             logger.warn("[rsync] rsync exited with status #{$?.exitstatus}, using SCP instead")
             @rsync_failed = true
@@ -107,7 +107,11 @@ module Kitchen
           args += %W{ -o IdentitiesOnly=yes } if @options[:keys]
           args += %W{ -o LogLevel=#{@logger.debug? ? "VERBOSE" : "ERROR"} }
           args += %W{ -o ForwardAgent=#{options[:forward_agent] ? "yes" : "no"} } if @options.key? :forward_agent
-          Array(@options[:keys]).each { |ssh_key| args += %W{ -i #{ssh_key}} }
+          # use '-o IdentityFile=/path/to/file' instead of '-i' flag.
+          # this fixes an error that shows up with:
+          # 'ssh_percent_expand: unknown key %2'
+          # when the path to key includes '%'.
+          Array(@options[:keys]).each { |ssh_key| args += %W{ -o IdentityFile=#{ssh_key.gsub('%', '%%')} } }
           args += %W{ -p #{@session.options[:port]}}
         end
       end

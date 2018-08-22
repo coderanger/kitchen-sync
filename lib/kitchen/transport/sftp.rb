@@ -100,7 +100,7 @@ module Kitchen
             time = Benchmark.realtime do
               sftp_upload!(local, full_remote, options)
             end
-            logger.info("[SFTP] Time taken to upload #{local} to #{self}:#{full_remote}: %.2f sec" % time)
+            logger.info("[SFTP] Time taken to upload %s to %s:%s: %.2f sec" % [ local, self, full_remote, time])
           end
         end
 
