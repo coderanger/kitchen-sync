@@ -16,6 +16,7 @@
 
 require 'benchmark'
 require 'digest/sha1'
+require 'fileutils'
 require 'json'
 
 require 'kitchen/transport/ssh'
@@ -102,6 +103,50 @@ module Kitchen
             end
             logger.info("[SFTP] Time taken to upload #{local} to #{self}:#{full_remote}: %.2f sec" % time)
           end
+        end
+
+        # (see Base::Connection#download)
+        def download(remotes, local)
+          # ensure the parent dir of the local target exists
+          FileUtils.mkdir_p(File.dirname(local))
+
+          Array(remotes).each do |remote|
+            entries = if remote.include? '*'
+              logger.debug("Interpreting remote '#{remote}' as glob, finding matching files...")
+              found_pattern = false
+              path = []
+              pattern = []
+              '/path/dir/*.json'.split('/').each do |comp|
+                found_pattern = true if comp.include? '*'
+                if found_pattern
+                  pattern << comp
+                else
+                  path << comp
+                end
+              end
+              sftp_session.dir.glob(path.join('/'), pattern.join('/'))
+            else
+              Array(remote)
+            end
+
+            entries.each do |entry|
+              begin
+                logger.debug("Attempting to download '#{remote}' as file")
+                sftp_session.download!(entry, local)
+              rescue Net::SFTP::Error
+                begin
+                  logger.debug("Attempting to download '#{remote}' as directory")
+                  sftp_session.download!(entry, local, recursive: true)
+                rescue Net::SFTP::Error
+                  logger.warn(
+                    "SFTP download failed for file or directory '#{remote}', perhaps it does not exist?"
+                  )
+                end
+              end
+            end
+          end
+        rescue Net::SSH::Exception => ex
+          raise SshFailed, "SCP download failed (#{ex.message})"
         end
 
         private
