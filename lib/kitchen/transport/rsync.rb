@@ -49,7 +49,7 @@ module Kitchen
 
       class Connection < Ssh::Connection
         def upload(locals, remote)
-          if @rsync_failed || system("which rsync") || system("where rsync")
+          if @rsync_failed || ! system("which rsync") || ! system("where rsync")
             logger.debug('[rsync] Rsync already failed or not installed, not trying it')
             return super
           end
