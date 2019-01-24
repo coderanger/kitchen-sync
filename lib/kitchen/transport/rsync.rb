@@ -49,24 +49,63 @@ module Kitchen
 
       class Connection < Ssh::Connection
         def upload(locals, remote)
-          if @rsync_failed || !File.exists?('/usr/bin/rsync')
+          if @rsync_failed || ! system("which rsync") || ! system("where rsync")
             logger.debug('[rsync] Rsync already failed or not installed, not trying it')
             return super
           end
 
           locals = Array(locals)
+
           # We only try to sync folders for now and ignore the cache folder
           # because we don't want to --delete that.
           rsync_candidates = locals.select {|path| File.directory?(path) && File.basename(path) != 'cache' }
+
+          # Code to deal with Windows platform path syntax being incompatible with rsync because of the colon
+          # current path transformation supported for cygwin and mingw platform only.
+          if ( /cygwin|mingw|mswin|bccwin|wince|emx/ =~ RbConfig::CONFIG['host_os'] ) != nil then
+            logger.debug('[rsync] Windows based')
+            case RbConfig::CONFIG['host_os']
+            when /cygwin/
+              logger.debug('[rsync] Cygwin Platform detected')
+              rsync_candidates_paths = rsync_candidates.map { |path| 
+                if path.include? ':'
+                  mod_path = path.delete(':')
+                  mod_path.gsub!(/\\/, '/')
+                  mod_path.prepend('/cygwin/')
+                end
+              }
+            when /mingw/
+              logger.debug('[rsync] MinGW Platform detected')
+              rsync_candidates_paths = rsync_candidates.map { |path| 
+                if path.include? ':'
+                  mod_path = path.delete(':')
+                  mod_path.gsub!(/\\/, '/')
+                  mod_path.prepend('/')
+                end
+              }
+            else
+              logger.debug("[rsync] Kitchen-Sync Rsync not configured to work for current platform: #{RbConfig::CONFIG['host_os']}")
+            end
+          else
+            logger.debug("[rsync] Non-Windows based Ruby Platform")
+          end
+
           ssh_command = "ssh #{ssh_args.join(' ')}"
-          copy_identity
-          rsync_cmd = "/usr/bin/rsync -e '#{ssh_command}' -az#{logger.level == :debug ? 'vv' : ''} --delete #{rsync_candidates.join(' ')} #{@session.options[:user]}@#{@session.host}:#{remote}"
+
+          # Catching the potential absence of pageant
+          begin
+            copy_identity
+          rescue
+            logger.debug("[rsync] Pageant not found, user keys not transferred")
+          end
+
+          rsync_cmd = "rsync -e '#{ssh_command}' -az#{logger.level == :debug ? 'vv' : ''} --delete #{rsync_candidates_paths.join(' ')} #{@session.options[:user]}@#{@session.host}:#{remote}"
           logger.debug("[rsync] Running rsync command: #{rsync_cmd}")
           ret = []
           time = Benchmark.realtime do
             ret << system(rsync_cmd)
           end
-          logger.info("[rsync] Time taken to upload #{rsync_candidates.join(';')} to #{self}:#{remote}: %.2f sec" % time)
+          logger.info("[rsync] Time taken to upload #{rsync_candidates_paths.join(';')} to #{self}:#{remote}: %.2f sec" % time)
           unless ret.first
             logger.warn("[rsync] rsync exited with status #{$?.exitstatus}, using SCP instead")
             @rsync_failed = true
