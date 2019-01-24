@@ -15,7 +15,6 @@
 #
 
 require 'base64'
-require 'mkmf'
 
 require 'kitchen/transport/ssh'
 require 'net/ssh'
@@ -50,8 +49,7 @@ module Kitchen
 
       class Connection < Ssh::Connection
         def upload(locals, remote)
-          rsync_cmd = find_executable 'rsync'
-          if @rsync_failed || rsync_cmd.to_s.empty?
+          if @rsync_failed || system("which rsync") || system("where rsync")
             logger.debug('[rsync] Rsync already failed or not installed, not trying it')
             return super
           end
