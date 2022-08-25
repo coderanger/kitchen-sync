@@ -98,7 +98,7 @@ module Kitchen
             }
             recursive = File.directory?(local)
             time = Benchmark.realtime do
-              sftp_upload!(local, full_remote, options)
+              sftp_upload!(local, full_remote, **options)
             end
             logger.info("[SFTP] Time taken to upload #{local} to #{self}:#{full_remote}: %.2f sec" % time)
           end
